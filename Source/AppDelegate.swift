@@ -93,9 +93,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func checkAccessibilityPermissions() {
-        // Request permissions if not already granted. This causes macOS to pop up the dialog!
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
-        AXIsProcessTrustedWithOptions(options as CFDictionary)
+        // Request permissions only if not already granted to prevent macOS DB locks
+        if !AXIsProcessTrusted() {
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+            AXIsProcessTrustedWithOptions(options as CFDictionary)
+        }
     }
     
     @objc func quitApp() {

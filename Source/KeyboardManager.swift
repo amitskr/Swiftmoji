@@ -58,7 +58,8 @@ class KeyboardManager {
     var caretPosition: CGPoint = .zero
     
     var triggerCharacter: String {
-        return UserDefaults.standard.string(forKey: "triggerCharacter") ?? ":"
+        let char = UserDefaults.standard.string(forKey: "triggerCharacter") ?? ":"
+        return char.isEmpty ? ":" : char
     }
     
     var triggerLength: Int {
@@ -107,6 +108,11 @@ class KeyboardManager {
         let keyCode = nsEvent.keyCode
         let chars = nsEvent.characters ?? ""
         
+        // Ignore modifier-only key events (which have empty characters) to prevent resetting states
+        if chars.isEmpty {
+            return false
+        }
+        
         let isEscape = keyCode == 53
         let isEnter = keyCode == 36 || keyCode == 76
         let isTab = keyCode == 48
@@ -123,17 +129,13 @@ class KeyboardManager {
                     let timeDiff = now.timeIntervalSince(lastTypedTime)
                     if lastTypedChar == triggerCharacter && timeDiff < 0.8 {
                         // Double trigger activated!
-                        if let caretRect = getCaretScreenPosition() {
-                            caretPosition = CGPoint(x: caretRect.origin.x + caretRect.width / 2, y: caretRect.origin.y)
-                        } else {
-                            let mouseLoc = NSEvent.mouseLocation
-                            caretPosition = CGPoint(x: mouseLoc.x, y: mouseLoc.y)
-                        }
                         isTracking = true
                         currentQuery = ""
                         selectedIndex = 0
                         matches = []
                         lastTypedChar = "" // Reset
+                        
+                        detectCaretPositionAsync()
                     } else {
                         // First trigger key typed. Save state.
                         lastTypedChar = triggerCharacter
@@ -141,16 +143,12 @@ class KeyboardManager {
                     }
                 } else {
                     // Single trigger activated!
-                    if let caretRect = getCaretScreenPosition() {
-                        caretPosition = CGPoint(x: caretRect.origin.x + caretRect.width / 2, y: caretRect.origin.y)
-                    } else {
-                        let mouseLoc = NSEvent.mouseLocation
-                        caretPosition = CGPoint(x: mouseLoc.x, y: mouseLoc.y)
-                    }
                     isTracking = true
                     currentQuery = ""
                     selectedIndex = 0
                     matches = []
+                    
+                    detectCaretPositionAsync()
                 }
                 return false // Let trigger character propagate to doc
             } else {
@@ -362,6 +360,26 @@ class KeyboardManager {
         if let keyUp = CGEvent(keyboardEventSource: source, virtualKey: spaceKey, keyDown: false) {
             keyUp.flags = flags
             keyUp.post(tap: .cgSessionEventTap)
+        }
+    }
+    
+    private func detectCaretPositionAsync() {
+        // Safe, instantaneous mouse fallback
+        let mouseLoc = NSEvent.mouseLocation
+        self.caretPosition = CGPoint(x: mouseLoc.x, y: mouseLoc.y)
+        
+        // Asynchronously query target text area caret coordinates to avoid event tap callback timeout locks
+        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+            guard let self = self else { return }
+            let rect = self.getCaretScreenPosition()
+            
+            DispatchQueue.main.async {
+                if let caretRect = rect {
+                    self.caretPosition = CGPoint(x: caretRect.origin.x + caretRect.width / 2, y: caretRect.origin.y)
+                }
+                // Force UI update once coordinates are established
+                self.updateUI()
+            }
         }
     }
     
