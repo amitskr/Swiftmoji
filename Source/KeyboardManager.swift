@@ -78,7 +78,7 @@ class KeyboardManager {
         let eventMask = (1 << CGEventType.keyDown.rawValue)
         
         guard let tap = CGEvent.tapCreate(
-            tap: .cghidEventTap,
+            tap: .cgSessionEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: CGEventMask(eventMask),
@@ -322,10 +322,10 @@ class KeyboardManager {
         
         for _ in 0..<count {
             if let eventDown = CGEvent(keyboardEventSource: source, virtualKey: backspaceKey, keyDown: true) {
-                eventDown.post(tap: .cghidEventTap)
+                eventDown.post(tap: .cgSessionEventTap)
             }
             if let eventUp = CGEvent(keyboardEventSource: source, virtualKey: backspaceKey, keyDown: false) {
-                eventUp.post(tap: .cghidEventTap)
+                eventUp.post(tap: .cgSessionEventTap)
             }
             // 2 milliseconds delay ensures the OS event pipeline processes them sequentially
             Thread.sleep(forTimeInterval: 0.002)
@@ -339,13 +339,13 @@ class KeyboardManager {
         if let eventDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true) {
             var tempChars = utf16Chars
             eventDown.keyboardSetUnicodeString(stringLength: tempChars.count, unicodeString: &tempChars)
-            eventDown.post(tap: .cghidEventTap)
+            eventDown.post(tap: .cgSessionEventTap)
         }
         
         if let eventUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) {
             var tempChars = utf16Chars
             eventUp.keyboardSetUnicodeString(stringLength: tempChars.count, unicodeString: &tempChars)
-            eventUp.post(tap: .cghidEventTap)
+            eventUp.post(tap: .cgSessionEventTap)
         }
     }
     
@@ -356,12 +356,12 @@ class KeyboardManager {
         
         if let keyDown = CGEvent(keyboardEventSource: source, virtualKey: spaceKey, keyDown: true) {
             keyDown.flags = flags
-            keyDown.post(tap: .cghidEventTap)
+            keyDown.post(tap: .cgSessionEventTap)
         }
         
         if let keyUp = CGEvent(keyboardEventSource: source, virtualKey: spaceKey, keyDown: false) {
             keyUp.flags = flags
-            keyUp.post(tap: .cghidEventTap)
+            keyUp.post(tap: .cgSessionEventTap)
         }
     }
     
