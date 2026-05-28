@@ -12,6 +12,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         UserDefaults.standard.register(defaults: [
             "soundEffects": true,
             "triggerCharacter": ":",
+            "useDoubleTrigger": false,
             "launchAtLogin": false,
             "skinTone": 0
         ])

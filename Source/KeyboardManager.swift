@@ -61,6 +61,14 @@ class KeyboardManager {
         return UserDefaults.standard.string(forKey: "triggerCharacter") ?? ":"
     }
     
+    var triggerLength: Int {
+        return UserDefaults.standard.bool(forKey: "useDoubleTrigger") ? 2 : 1
+    }
+    
+    // Double key consecutive tracking
+    var lastTypedChar = ""
+    var lastTypedTime = Date()
+    
     init(floatingPanel: FloatingPanel) {
         self.floatingPanel = floatingPanel
         KeyboardManager.shared = self
@@ -109,22 +117,45 @@ class KeyboardManager {
         if !isTracking {
             // Trigger character starts autocomplete tracking
             if chars == triggerCharacter {
-                // Find screen caret position
-                if let caretRect = getCaretScreenPosition() {
-                    caretPosition = CGPoint(x: caretRect.origin.x + caretRect.width / 2, y: caretRect.origin.y)
+                let useDoubleTrigger = UserDefaults.standard.bool(forKey: "useDoubleTrigger")
+                if useDoubleTrigger {
+                    let now = Date()
+                    let timeDiff = now.timeIntervalSince(lastTypedTime)
+                    if lastTypedChar == triggerCharacter && timeDiff < 0.8 {
+                        // Double trigger activated!
+                        if let caretRect = getCaretScreenPosition() {
+                            caretPosition = CGPoint(x: caretRect.origin.x + caretRect.width / 2, y: caretRect.origin.y)
+                        } else {
+                            let mouseLoc = NSEvent.mouseLocation
+                            caretPosition = CGPoint(x: mouseLoc.x, y: mouseLoc.y)
+                        }
+                        isTracking = true
+                        currentQuery = ""
+                        selectedIndex = 0
+                        matches = []
+                        lastTypedChar = "" // Reset
+                    } else {
+                        // First trigger key typed. Save state.
+                        lastTypedChar = triggerCharacter
+                        lastTypedTime = now
+                    }
                 } else {
-                    // Fallback to mouse pointer position
-                    let mouseLoc = NSEvent.mouseLocation
-                    caretPosition = CGPoint(x: mouseLoc.x, y: mouseLoc.y)
+                    // Single trigger activated!
+                    if let caretRect = getCaretScreenPosition() {
+                        caretPosition = CGPoint(x: caretRect.origin.x + caretRect.width / 2, y: caretRect.origin.y)
+                    } else {
+                        let mouseLoc = NSEvent.mouseLocation
+                        caretPosition = CGPoint(x: mouseLoc.x, y: mouseLoc.y)
+                    }
+                    isTracking = true
+                    currentQuery = ""
+                    selectedIndex = 0
+                    matches = []
                 }
-                
-                isTracking = true
-                currentQuery = ""
-                selectedIndex = 0
-                matches = []
-                
-                // Do not swallow the initial `:` - we want it typed in the text area!
-                return false
+                return false // Let trigger character propagate to doc
+            } else {
+                // Typed anything else, reset consecutive sequence
+                lastTypedChar = ""
             }
             return false
         } else {
@@ -190,7 +221,7 @@ class KeyboardManager {
     }
     
     func insertSelectedEmoji() {
-        let shortcutLength = currentQuery.count + 1 // Query characters + leading trigger
+        let shortcutLength = currentQuery.count + triggerLength // Query characters + trigger length (1 or 2)
         
         isAutoCompleting = true
         

@@ -4,6 +4,7 @@ import ServiceManagement
 struct PreferencesView: View {
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     @AppStorage("triggerCharacter") private var triggerCharacter = ":"
+    @AppStorage("useDoubleTrigger") private var useDoubleTrigger = false
     @AppStorage("soundEffects") private var soundEffects = true
     @AppStorage("skinTone") private var skinTone = 0
     
@@ -38,30 +39,44 @@ struct PreferencesView: View {
                 
                 Divider().background(Color.white.opacity(0.1))
                 
-                // Row 2: Trigger character
+                // Row 2: Trigger key (Matches user's layout specification)
                 preferenceRow(
-                    title: "Trigger character",
-                    description: "Character that activates emoji lookup",
-                    control: Menu {
-                        ForEach(triggerOptions, id: \.self) { char in
-                            Button(char) {
-                                triggerCharacter = char
+                    title: "Trigger key",
+                    description: "Character and method that activates emoji lookup",
+                    control: HStack(spacing: 8) {
+                        Menu {
+                            ForEach(triggerOptions, id: \.self) { char in
+                                Button(char) {
+                                    triggerCharacter = char
+                                }
                             }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(triggerCharacter)
+                                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.1)))
+                            .foregroundColor(.white)
                         }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(triggerCharacter)
-                                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(.white.opacity(0.6))
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.1)))
-                        .foregroundColor(.white)
+                        .menuStyle(.borderlessButton)
+                        
+                        // Tooltip help icon
+                        Image(systemName: "questionmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.3))
+                            .font(.system(size: 16))
+                            .help("Select the character used to search for emojis. Checking 'Use double key trigger' requires typing this character twice consecutively to open autocomplete.")
+                        
+                        // Checkbox toggle
+                        Toggle("Use double key trigger", isOn: $useDoubleTrigger)
+                            .toggleStyle(.checkbox)
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.8))
                     }
-                    .menuStyle(.borderlessButton)
                 )
                 
                 Divider().background(Color.white.opacity(0.1))
@@ -120,7 +135,7 @@ struct PreferencesView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.08), lineWidth: 1))
         }
         .padding(20)
-        .frame(width: 480, height: 400)
+        .frame(width: 500, height: 400) // Slightly widened to fit the trigger options cleanly
         .background(VisualEffectView(material: .hudWindow, blendingMode: .behindWindow).ignoresSafeArea())
         .colorScheme(.dark)
     }
