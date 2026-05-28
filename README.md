@@ -1,7 +1,7 @@
 # Swiftmoji ☘︎
 
 <p align="center">
-  <img src="Resources/Screenshots/media__1779987739034.png" width="128" height="128" alt="Swiftmoji App Icon" />
+  <img src="Resources/Screenshots/app_icon.png" width="128" height="128" alt="Swiftmoji App Icon" />
 </p>
 
 **Swiftmoji** is a premium, lightweight, and native macOS utility designed specifically for Apple Silicon. It runs quietly as a background status bar agent, monitoring global keystrokes to let you type Slack-style shortcodes (e.g. `:thumbsup:`) in **any active application** and auto-complete them instantly near your text caret!
@@ -16,14 +16,28 @@ Featuring an elegant dark glassmorphic design language, responsive hover micro-a
 When you type your trigger character followed by a keyword, a borderless floating panel automatically aligns next to your text cursor:
 
 <p align="center">
-  <img src="Resources/Screenshots/media__1779988477479.jpg" width="400" alt="Autocomplete HUD Panel" />
+  <img src="Resources/Screenshots/hud_autocomplete.jpg" width="400" alt="Autocomplete HUD Panel" />
 </p>
 
 ### 2. Premium "Browse All Emojis" Split-View Window
 Selecting "+ Browse all emoji..." inside the HUD panel or using the global menu triggers the advanced 3-column split view browser:
 
 <p align="center">
-  <img src="Resources/Screenshots/media__1779973816731.jpg" width="700" alt="Swiftmoji Split-View Browser Mockup" />
+  <img src="Resources/Screenshots/emoji_browser.png" width="700" alt="Swiftmoji Split-View Browser" />
+</p>
+
+### 3. Custom Templates & Snippets Library
+Browse, search, and bind customized global shortcodes to frequently used text, signatures, and code templates:
+
+<p align="center">
+  <img src="Resources/Screenshots/snippets_browser.png" width="700" alt="Snippets Browser" />
+</p>
+
+### 4. Interactive Preferences Panel
+Quickly customize launch behaviors, trigger characters, double-key activation timers, sound effects, and default Fitzpatrick skin tones:
+
+<p align="center">
+  <img src="Resources/Screenshots/preferences.png" width="450" alt="Swiftmoji Preferences" />
 </p>
 
 ---
