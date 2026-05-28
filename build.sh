@@ -18,6 +18,10 @@ mkdir -p "${RESOURCES_DIR}"
 # 2. Copy metadata settings
 echo "📝 Packaging Info.plist configurations..."
 cp Resources/Info.plist "${CONTENTS_DIR}/Info.plist"
+if [ -f Resources/AppIcon.icns ]; then
+  echo "🎨 Copying application icon..."
+  cp Resources/AppIcon.icns "${RESOURCES_DIR}/AppIcon.icns"
+fi
 
 # 3. Locate macOS SDK path
 SDK_PATH=$(xcrun --show-sdk-path --sdk macosx)

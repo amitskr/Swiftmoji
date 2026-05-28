@@ -183,7 +183,7 @@ struct PreferencesView: View {
             }
         } else {
             // Fallback for macOS 11 & 12
-            SMLoginItemSetEnabled("com.antigravity.Swiftmoji" as CFString, enabled)
+            SMLoginItemSetEnabled("com.amitsarkar.Swiftmoji" as CFString, enabled)
         }
     }
 }

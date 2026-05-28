@@ -4,6 +4,7 @@ struct AutocompleteView: View {
     let matches: [EmojiItem]
     let selectedIndex: Int
     let query: String
+    let onSelect: (Int) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -67,6 +68,10 @@ struct AutocompleteView: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(isSelected ? Color.blue.opacity(0.5) : Color.clear, lineWidth: 1)
                             )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                onSelect(index)
+                            }
                         }
                     }
                     .padding(.horizontal, 6)
@@ -119,6 +124,10 @@ struct AutocompleteView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(isBrowseSelected ? Color.blue.opacity(0.5) : Color.clear, lineWidth: 1)
             )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onSelect(matches.count)
+            }
             .padding(6)
         }
         .frame(width: 280)

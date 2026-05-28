@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.antigravity.Swiftmoji</string>
+    <string>com.amitsarkar.Swiftmoji</string>
     <key>CFBundleName</key>
     <string>Swiftmoji</string>
     <key>CFBundlePackageType</key>
@@ -20,5 +20,7 @@
     <string>NSApplication</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon.icns</string>
 </dict>
 </plist>

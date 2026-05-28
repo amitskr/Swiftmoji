@@ -2,6 +2,8 @@ import Cocoa
 import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    static var shared: AppDelegate?
+    
     var statusItem: NSStatusItem?
     var keyboardManager: KeyboardManager?
     var floatingPanel: FloatingPanel?
@@ -9,6 +11,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var emojiBrowserWindow: NSWindow?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        AppDelegate.shared = self
+        
         // Register standard defaults
         UserDefaults.standard.register(defaults: [
             "soundEffects": true,
@@ -34,7 +38,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            button.title = "🚀"
+            let font = NSFont.systemFont(ofSize: 18)
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: font,
+                .foregroundColor: NSColor.labelColor
+            ]
+            button.attributedTitle = NSAttributedString(string: "☘︎", attributes: attributes)
             button.action = #selector(statusItemClicked)
             button.target = self
         }

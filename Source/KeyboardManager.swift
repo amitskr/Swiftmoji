@@ -106,6 +106,17 @@ class KeyboardManager {
     // Main key event processing
     func handleKeyEvent(_ nsEvent: NSEvent, event: CGEvent) -> Bool {
         let keyCode = nsEvent.keyCode
+        
+        // Intercept Control-Command-Space (macOS default emoji picker shortcut)
+        // to open our custom premium Emoji Browser instead!
+        let flags = nsEvent.modifierFlags
+        if keyCode == 49 && flags.contains(.command) && flags.contains(.control) {
+            DispatchQueue.main.async {
+                AppDelegate.shared?.openEmojiBrowser()
+            }
+            return true // Swallow the event so the native picker doesn't open
+        }
+        
         let chars = nsEvent.characters ?? ""
         
         // Ignore modifier-only key events (which have empty characters) to prevent resetting states
@@ -234,9 +245,7 @@ class KeyboardManager {
             // Option "Browse all emoji..." is selected.
             // Trigger custom Swiftmoji Browser window instead of basic native palette!
             DispatchQueue.main.async {
-                if let delegate = NSApplication.shared.delegate as? AppDelegate {
-                    delegate.openEmojiBrowser()
-                }
+                AppDelegate.shared?.openEmojiBrowser()
             }
         } else if selectedIndex >= 0 && selectedIndex < matches.count {
             // Standard emoji selection
@@ -319,7 +328,11 @@ class KeyboardManager {
         let hostingView = NSHostingView(rootView: AutocompleteView(
             matches: matches,
             selectedIndex: selectedIndex,
-            query: currentQuery
+            query: currentQuery,
+            onSelect: { [weak self] index in
+                self?.selectedIndex = index
+                self?.insertSelectedEmoji()
+            }
         ))
         
         floatingPanel.show(at: caretPosition, content: hostingView)
