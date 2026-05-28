@@ -9,7 +9,6 @@ struct PreferencesView: View {
     @AppStorage("skinTone") private var skinTone = 0
     
     let skinTones = ["👋", "👋🏻", "👋🏼", "👋🏽", "👋🏾", "👋🏿"]
-    let triggerOptions = [":", ";", ".", ",", "~"]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -39,37 +38,42 @@ struct PreferencesView: View {
                 
                 Divider().background(Color.white.opacity(0.1))
                 
-                // Row 2: Trigger key (Matches user's layout specification)
+                // Row 2: Trigger key (Updated with typed TextField instead of dropdown menu)
                 preferenceRow(
                     title: "Trigger key",
                     description: "Character and method that activates emoji lookup",
                     control: HStack(spacing: 8) {
-                        Menu {
-                            ForEach(triggerOptions, id: \.self) { char in
-                                Button(char) {
-                                    triggerCharacter = char
+                        // Editable Text Field limited to a single character
+                        TextField("", text: Binding(
+                            get: { triggerCharacter },
+                            set: { newValue in
+                                if let firstChar = newValue.first {
+                                    triggerCharacter = String(firstChar)
+                                } else {
+                                    triggerCharacter = "" // Let user delete it, but we can default back to ":"
                                 }
                             }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Text(triggerCharacter)
-                                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                                Image(systemName: "chevron.down")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.6))
+                        ), onCommit: {
+                            if triggerCharacter.isEmpty {
+                                triggerCharacter = ":" // Default fallback if they leave it empty
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.1)))
-                            .foregroundColor(.white)
-                        }
-                        .menuStyle(.borderlessButton)
+                        })
+                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 42, height: 26)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.1)))
+                        .textFieldStyle(PlainTextFieldStyle())
+                        .foregroundColor(.white)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
                         
                         // Tooltip help icon
                         Image(systemName: "questionmark.circle.fill")
                             .foregroundColor(.white.opacity(0.3))
                             .font(.system(size: 16))
-                            .help("Select the character used to search for emojis. Checking 'Use double key trigger' requires typing this character twice consecutively to open autocomplete.")
+                            .help("Type any single character to use as the trigger (e.g. :, ;, ~). Checking 'Use double key trigger' requires typing it twice consecutively.")
                         
                         // Checkbox toggle
                         Toggle("Use double key trigger", isOn: $useDoubleTrigger)
@@ -135,7 +139,7 @@ struct PreferencesView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.08), lineWidth: 1))
         }
         .padding(20)
-        .frame(width: 500, height: 400) // Slightly widened to fit the trigger options cleanly
+        .frame(width: 500, height: 400)
         .background(VisualEffectView(material: .hudWindow, blendingMode: .behindWindow).ignoresSafeArea())
         .colorScheme(.dark)
     }

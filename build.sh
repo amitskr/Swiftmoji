@@ -38,6 +38,10 @@ swiftc \
   Source/PreferencesView.swift \
   Source/SwiftmojiApp.swift
 
+# 5. Apply ad-hoc code signature to register with TCC (Accessibility) properly
+echo "🔏 Applying ad-hoc code signature..."
+codesign --force --deep --sign - "${APP_DIR}"
+
 echo "🎉 Swiftmoji compiled and bundled successfully!"
 echo "📍 App Bundle Location: $(pwd)/${APP_DIR}"
 echo "👉 Start using: open ${APP_DIR}"
