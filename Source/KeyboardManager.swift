@@ -137,19 +137,21 @@ class KeyboardManager {
                 return true // Swallow escape to close the panel cleanly
             }
             
-            if isArrowDown && !matches.isEmpty {
-                selectedIndex = (selectedIndex + 1) % matches.count
+            let totalItems = matches.count + 1
+            
+            if isArrowDown {
+                selectedIndex = (selectedIndex + 1) % totalItems
                 updateUI()
                 return true // Swallow arrow
             }
             
-            if isArrowUp && !matches.isEmpty {
-                selectedIndex = (selectedIndex - 1 + matches.count) % matches.count
+            if isArrowUp {
+                selectedIndex = (selectedIndex - 1 + totalItems) % totalItems
                 updateUI()
                 return true // Swallow arrow
             }
             
-            if (isEnter || isTab) && !matches.isEmpty {
+            if isEnter || isTab {
                 insertSelectedEmoji()
                 return true // Swallow enter/tab and auto-complete
             }
@@ -184,12 +186,6 @@ class KeyboardManager {
     }
     
     func insertSelectedEmoji() {
-        guard selectedIndex >= 0 && selectedIndex < matches.count else {
-            cancelTracking()
-            return
-        }
-        
-        let emoji = matches[selectedIndex].emoji
         let shortcutLength = currentQuery.count + 1 // Query characters + leading ":"
         
         isAutoCompleting = true
@@ -201,8 +197,15 @@ class KeyboardManager {
         // Delete the shortcut by posting backspaces
         sendBackspace(count: shortcutLength)
         
-        // Send the unicode emoji
-        typeString(emoji)
+        if selectedIndex == matches.count {
+            // Option "Browse all emoji..." is selected.
+            // Trigger standard macOS Emoji & Symbols palette
+            triggerEmojiPicker()
+        } else if selectedIndex >= 0 && selectedIndex < matches.count {
+            // Standard emoji selection
+            let emoji = matches[selectedIndex].emoji
+            typeString(emoji)
+        }
         
         isAutoCompleting = false
     }
@@ -240,7 +243,7 @@ class KeyboardManager {
     }
     
     func updateUI() {
-        if !isTracking || matches.isEmpty {
+        if !isTracking {
             floatingPanel.hidePanel()
             return
         }
@@ -285,6 +288,22 @@ class KeyboardManager {
             var tempChars = utf16Chars
             eventUp.keyboardSetUnicodeString(stringLength: tempChars.count, unicodeString: &tempChars)
             eventUp.post(tap: .cghidEventTap)
+        }
+    }
+    
+    private func triggerEmojiPicker() {
+        let source = CGEventSource(stateID: .hidSystemState)
+        let flags: CGEventFlags = [.maskControl, .maskCommand]
+        let spaceKey: CGKeyCode = 49 // Space bar is 49 (0x31)
+        
+        if let keyDown = CGEvent(keyboardEventSource: source, virtualKey: spaceKey, keyDown: true) {
+            keyDown.flags = flags
+            keyDown.post(tap: .cghidEventTap)
+        }
+        
+        if let keyUp = CGEvent(keyboardEventSource: source, virtualKey: spaceKey, keyDown: false) {
+            keyUp.flags = flags
+            keyUp.post(tap: .cghidEventTap)
         }
     }
     
