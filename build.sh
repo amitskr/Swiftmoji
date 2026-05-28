@@ -35,6 +35,7 @@ swiftc \
   Source/FloatingPanel.swift \
   Source/KeyboardManager.swift \
   Source/AppDelegate.swift \
+  Source/PreferencesView.swift \
   Source/SwiftmojiApp.swift
 
 echo "🎉 Swiftmoji compiled and bundled successfully!"

@@ -5,8 +5,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var keyboardManager: KeyboardManager?
     var floatingPanel: FloatingPanel?
+    var preferencesWindow: NSWindow?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Register standard defaults
+        UserDefaults.standard.register(defaults: [
+            "soundEffects": true,
+            "triggerCharacter": ":",
+            "launchAtLogin": false,
+            "skinTone": 0
+        ])
+        
         // 1. Check Accessibility Permissions on startup
         checkAccessibilityPermissions()
         
@@ -32,6 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "About Swiftmoji", action: #selector(aboutApp), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Check Accessibility Permissions", action: #selector(checkAccessibility), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Swiftmoji", action: #selector(quitApp), keyEquivalent: "q"))
         
@@ -89,5 +99,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc func quitApp() {
         NSApplication.shared.terminate(nil)
+    }
+    
+    @objc func openPreferences() {
+        if preferencesWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 480, height: 400),
+                styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "Swiftmoji Preferences"
+            window.center()
+            window.isReleasedWhenClosed = false
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            
+            // Set SwiftUI View
+            let hostingView = NSHostingView(rootView: PreferencesView())
+            window.contentView = hostingView
+            
+            preferencesWindow = window
+        }
+        
+        preferencesWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }

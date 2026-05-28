@@ -57,6 +57,10 @@ class KeyboardManager {
     // Screen coordinates for caret
     var caretPosition: CGPoint = .zero
     
+    var triggerCharacter: String {
+        return UserDefaults.standard.string(forKey: "triggerCharacter") ?? ":"
+    }
+    
     init(floatingPanel: FloatingPanel) {
         self.floatingPanel = floatingPanel
         KeyboardManager.shared = self
@@ -103,8 +107,8 @@ class KeyboardManager {
         let isArrowUp = keyCode == 126
         
         if !isTracking {
-            // Trigger character ":" starts autocomplete tracking
-            if chars == ":" {
+            // Trigger character starts autocomplete tracking
+            if chars == triggerCharacter {
                 // Find screen caret position
                 if let caretRect = getCaretScreenPosition() {
                     caretPosition = CGPoint(x: caretRect.origin.x + caretRect.width / 2, y: caretRect.origin.y)
@@ -126,10 +130,10 @@ class KeyboardManager {
         } else {
             // Active tracking session
             
-            // If the user types the closing `:` and we have a valid selection, complete it!
-            if chars == ":" && !matches.isEmpty {
+            // If the user types the closing trigger and we have a valid selection, complete it!
+            if chars == triggerCharacter && !matches.isEmpty {
                 insertSelectedEmoji()
-                return true // Swallow the `:` and insert
+                return true // Swallow the trigger and insert
             }
             
             if isEscape {
@@ -186,7 +190,7 @@ class KeyboardManager {
     }
     
     func insertSelectedEmoji() {
-        let shortcutLength = currentQuery.count + 1 // Query characters + leading ":"
+        let shortcutLength = currentQuery.count + 1 // Query characters + leading trigger
         
         isAutoCompleting = true
         
@@ -203,8 +207,31 @@ class KeyboardManager {
             triggerEmojiPicker()
         } else if selectedIndex >= 0 && selectedIndex < matches.count {
             // Standard emoji selection
-            let emoji = matches[selectedIndex].emoji
-            typeString(emoji)
+            let baseEmoji = matches[selectedIndex].emoji
+            var finalEmoji = baseEmoji
+            
+            // Apply skin tone modifier if applicable
+            let tone = UserDefaults.standard.integer(forKey: "skinTone")
+            let skinToneModifiers = ["", "🏻", "🏼", "🏽", "🏾", "🏿"]
+            let skinToneSupportedBaseEmojis: Set<String> = [
+                "👍", "👎", "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏",
+                "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉", "👆", "🖕", "👇",
+                "☝️", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝",
+                "🙏", "✍️", "💅", "🤳", "💪", "👂", "👃"
+            ]
+            
+            if tone > 0 && tone < skinToneModifiers.count {
+                if skinToneSupportedBaseEmojis.contains(baseEmoji) {
+                    finalEmoji = baseEmoji + skinToneModifiers[tone]
+                }
+            }
+            
+            typeString(finalEmoji)
+            
+            // Play pop sound if enabled
+            if UserDefaults.standard.bool(forKey: "soundEffects") {
+                NSSound(named: "Pop")?.play()
+            }
         }
         
         isAutoCompleting = false
