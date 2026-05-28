@@ -232,12 +232,23 @@ class KeyboardManager {
         
         if selectedIndex == matches.count {
             // Option "Browse all emoji..." is selected.
-            // Trigger standard macOS Emoji & Symbols palette
-            triggerEmojiPicker()
+            // Trigger custom Swiftmoji Browser window instead of basic native palette!
+            DispatchQueue.main.async {
+                if let delegate = NSApplication.shared.delegate as? AppDelegate {
+                    delegate.openEmojiBrowser()
+                }
+            }
         } else if selectedIndex >= 0 && selectedIndex < matches.count {
             // Standard emoji selection
             let baseEmoji = matches[selectedIndex].emoji
             var finalEmoji = baseEmoji
+            
+            // Increment usage statistics in UserDefaults
+            let usageKey = "emojiUsageCount"
+            var usage = UserDefaults.standard.dictionary(forKey: usageKey) as? [String: Int] ?? [:]
+            let currentCount = usage[baseEmoji] ?? 0
+            usage[baseEmoji] = currentCount + 1
+            UserDefaults.standard.set(usage, forKey: usageKey)
             
             // Apply skin tone modifier if applicable
             let tone = UserDefaults.standard.integer(forKey: "skinTone")

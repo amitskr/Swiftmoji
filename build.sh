@@ -36,6 +36,7 @@ swiftc \
   Source/KeyboardManager.swift \
   Source/AppDelegate.swift \
   Source/PreferencesView.swift \
+  Source/EmojiBrowserView.swift \
   Source/SwiftmojiApp.swift
 
 # 5. Apply ad-hoc code signature to register with TCC (Accessibility) properly

@@ -6,6 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var keyboardManager: KeyboardManager?
     var floatingPanel: FloatingPanel?
     var preferencesWindow: NSWindow?
+    var emojiBrowserWindow: NSWindow?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Register standard defaults
@@ -41,6 +42,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "About Swiftmoji", action: #selector(aboutApp), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Browse Emojis...", action: #selector(openEmojiBrowser), keyEquivalent: "b"))
         menu.addItem(NSMenuItem(title: "Check Accessibility Permissions", action: #selector(checkAccessibility), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
@@ -126,6 +128,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         preferencesWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    @objc func openEmojiBrowser() {
+        if emojiBrowserWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 920, height: 600),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "Swiftmoji Browser"
+            window.center()
+            window.isReleasedWhenClosed = false
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            
+            // Set SwiftUI View
+            let hostingView = NSHostingView(rootView: EmojiBrowserView())
+            window.contentView = hostingView
+            
+            emojiBrowserWindow = window
+        }
+        
+        emojiBrowserWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 }

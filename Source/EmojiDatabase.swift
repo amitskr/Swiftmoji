@@ -1,15 +1,78 @@
 import Foundation
+import Cocoa
 
 struct EmojiItem: Identifiable, Hashable {
     let id = UUID()
     let emoji: String
     let shortcode: String
+    var category: String = "Smileys & People"
 }
 
 class EmojiDatabase {
     static let shared = EmojiDatabase()
     
-    let allEmojis: [EmojiItem]
+    let baseEmojis: [EmojiItem]
+    
+    // Dynamic list containing both base emojis and custom shortcodes
+    var allEmojis: [EmojiItem] {
+        var items = baseEmojis
+        
+        // Append user custom shortcuts dynamically
+        let custom = customShortcuts
+        for (emoji, codes) in custom {
+            for code in codes {
+                // Prevent duplicate entries
+                if !items.contains(where: { $0.emoji == emoji && $0.shortcode == code }) {
+                    let cat = baseEmojis.first(where: { $0.emoji == emoji })?.category ?? "Smileys & People"
+                    items.append(EmojiItem(emoji: emoji, shortcode: code, category: cat))
+                }
+            }
+        }
+        
+        return items
+    }
+    
+    // Persistence key
+    private let customShortcutsKey = "customShortcuts"
+    
+    var customShortcuts: [String: [String]] {
+        get {
+            return UserDefaults.standard.dictionary(forKey: customShortcutsKey) as? [String: [String]] ?? [:]
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: customShortcutsKey)
+        }
+    }
+    
+    func addCustomShortcut(for emoji: String, code: String) {
+        var dict = customShortcuts
+        var codes = dict[emoji] ?? []
+        let cleanCode = code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        
+        if !cleanCode.isEmpty && !codes.contains(cleanCode) {
+            codes.append(cleanCode)
+            dict[emoji] = codes
+            customShortcuts = dict
+            
+            // Play responsive soft pop on successful add
+            if UserDefaults.standard.bool(forKey: "soundEffects") {
+                NSSound(named: "Pop")?.play()
+            }
+        }
+    }
+    
+    func removeCustomShortcut(for emoji: String, code: String) {
+        var dict = customShortcuts
+        if var codes = dict[emoji] {
+            codes.removeAll(where: { $0 == code })
+            if codes.isEmpty {
+                dict.removeValue(forKey: emoji)
+            } else {
+                dict[emoji] = codes
+            }
+            customShortcuts = dict
+        }
+    }
     
     private init() {
         var items: [EmojiItem] = []
@@ -97,14 +160,14 @@ class EmojiDatabase {
             ("🦈", "shark"), ("🐙", "octopus"), ("🐚", "shell"), ("🐌", "snail"),
             ("🦋", "butterfly"), ("🐛", "bug"), ("🐜", "ant"), ("🐝", "bee"),
             ("🪲", "beetle"), ("🐞", "ladybug"), ("🦗", "cricket"), ("🪳", "cockroach"),
-            ("🕷️", "spider"), ("🕸️", "spider_web"), ("Scorpion", "🦂"), (" Mosquito", "🦟"), // Wait, fix syntax here
-            ("🦟", "mosquito"), ("🪰", "fly"), ("🪱", "worm"), ("🦠", "microbe"),
-            ("💐", "bouquet"), ("🌸", "cherry_blossom"), ("💮", "white_flower"), ("🏵️", "rosette"),
-            ("🌹", "rose"), ("🥀", "wilted_flower"), ("🌺", "hibiscus"), ("🌻", "sunflower"),
-            ("🌼", "blossom"), ("🌷", "tulip"), ("🌱", "seedling"), ("🪴", "potted_plant"),
-            ("🌲", "evergreen_tree"), ("🌳", "deciduous_tree"), ("🌴", "palm_tree"), ("🌵", "cactus"),
-            ("🌾", "sheaf_of_rice"), ("🌿", "herb"), ("☘️", "shamrock"), ("🍀", "clover"),
-            ("🍁", "maple_leaf"), ("🍂", "fallen_leaf"), ("🍃", "leaves")
+            ("🕷️", "spider"), ("🕸️", "spider_web"), ("🦂", "scorpion"), ("🦟", "mosquito"),
+            ("🪰", "fly"), ("🪱", "worm"), ("🦠", "microbe"), ("💐", "bouquet"),
+            ("🌸", "cherry_blossom"), ("💮", "white_flower"), ("🏵️", "rosette"), ("🌹", "rose"),
+            ("🥀", "wilted_flower"), ("🌺", "hibiscus"), ("🌻", "sunflower"), ("🌼", "blossom"),
+            ("🌷", "tulip"), ("🌱", "seedling"), ("🪴", "potted_plant"), ("🌲", "evergreen_tree"),
+            ("🌳", "deciduous_tree"), ("🌴", "palm_tree"), ("🌵", "cactus"), ("🌾", "sheaf_of_rice"),
+            ("🌿", "herb"), ("☘️", "shamrock"), ("🍀", "clover"), ("🍁", "maple_leaf"),
+            ("🍂", "fallen_leaf"), ("🍃", "leaves")
         ]
         
         // Food & Drink
@@ -145,7 +208,7 @@ class EmojiDatabase {
         // Travel, Places & Objects
         let travelAndObjects = [
             ("🚗", "car"), ("🚕", "taxi"), ("🚙", "blue_car"), ("🚌", "bus"),
-            ("🚎", "trolleybus"), ("🏎️", "race_car"), ("🚓", "police_car"), ("%5C", "ambulance"), // Wait, fix escape
+            ("🚎", "trolleybus"), ("🏎️", "race_car"), ("🚓", "police_car"),
             ("🚑", "ambulance"), ("🚒", "fire_engine"), ("🚐", "minibus"), ("🛻", "pickup_truck"),
             ("🚚", "truck"), ("🚛", "articulated_lorry"), ("🚜", "tractor"), ("🏍️", "motorcycle"),
             ("🛵", "motor_scooter"), ("🦽", "manual_wheelchair"), ("🦼", "motorized_wheelchair"), ("🛺", "auto_rickshaw"),
@@ -209,19 +272,53 @@ class EmojiDatabase {
             ("🎊", "confetti_ball"), ("🎈", "balloon"), ("🎁", "gift"), ("🍀", "four_leaf_clover")
         ]
         
-        let allGroups = [smileys, gestures, animalsAndNature, foodAndDrink, travelAndObjects, techAndSymbols]
-        
-        for group in allGroups {
-            for (emoji, shortcode) in group {
-                let cleanEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
-                let cleanShortcode = shortcode.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !cleanEmoji.isEmpty && !cleanShortcode.isEmpty {
-                    items.append(EmojiItem(emoji: cleanEmoji, shortcode: cleanShortcode))
-                }
+        // 1. Smileys & Gestures (Smileys & People)
+        let smileysGroup = smileys + gestures
+        for (emoji, shortcode) in smileysGroup {
+            let cleanEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleanShortcode = shortcode.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !cleanEmoji.isEmpty && !cleanShortcode.isEmpty {
+                items.append(EmojiItem(emoji: cleanEmoji, shortcode: cleanShortcode, category: "Smileys & People"))
             }
         }
         
-        // Remove duplicates if any
+        // 2. Animals & Nature
+        for (emoji, shortcode) in animalsAndNature {
+            let cleanEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleanShortcode = shortcode.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !cleanEmoji.isEmpty && !cleanShortcode.isEmpty {
+                items.append(EmojiItem(emoji: cleanEmoji, shortcode: cleanShortcode, category: "Animals & Nature"))
+            }
+        }
+        
+        // 3. Food & Drink
+        for (emoji, shortcode) in foodAndDrink {
+            let cleanEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleanShortcode = shortcode.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !cleanEmoji.isEmpty && !cleanShortcode.isEmpty {
+                items.append(EmojiItem(emoji: cleanEmoji, shortcode: cleanShortcode, category: "Food & Drink"))
+            }
+        }
+        
+        // 4. Travel & Places
+        for (emoji, shortcode) in travelAndObjects {
+            let cleanEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleanShortcode = shortcode.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !cleanEmoji.isEmpty && !cleanShortcode.isEmpty {
+                items.append(EmojiItem(emoji: cleanEmoji, shortcode: cleanShortcode, category: "Travel & Places"))
+            }
+        }
+        
+        // 5. Tech & Symbols (Objects & Symbols)
+        for (emoji, shortcode) in techAndSymbols {
+            let cleanEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleanShortcode = shortcode.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !cleanEmoji.isEmpty && !cleanShortcode.isEmpty {
+                items.append(EmojiItem(emoji: cleanEmoji, shortcode: cleanShortcode, category: "Objects & Symbols"))
+            }
+        }
+        
+        // Remove duplicates if any in base emojis
         var uniqueItems: [EmojiItem] = []
         var seenShortcodes = Set<String>()
         for item in items {
@@ -231,6 +328,6 @@ class EmojiDatabase {
             }
         }
         
-        self.allEmojis = uniqueItems
+        self.baseEmojis = uniqueItems
     }
 }
