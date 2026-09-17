@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/Architecture-Apple%20Silicon%20(M1--M5)-purple" alt="Apple Silicon Native" />
   <img src="https://img.shields.io/badge/Language-Swift%20%2F%20SwiftUI-orange?logo=swift" alt="Swift & SwiftUI" />
   <img src="https://img.shields.io/badge/Privacy-100%25%20Offline-success" alt="100% Offline" />
-  <img src="https://img.shields.io/badge/Trigger-Double%20Backslash%20(\\\\)-indigo" alt="Default Trigger: \\" />
+  <img src="https://img.shields.io/badge/Trigger-Double%20Backslash%20(\\)-indigo" alt="Default Trigger: \\" />
 </p>
 
 ---
