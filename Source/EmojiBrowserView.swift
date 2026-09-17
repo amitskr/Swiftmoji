@@ -41,17 +41,18 @@ struct SnippetItem: Identifiable, Hashable {
     let category: String
 }
 
-struct GifItem: Identifiable, Hashable {
-    let id = UUID()
-    let emojiPlaceholder: String
-    let title: String
-    let urlString: String
-}
-
 struct EmojiBrowserView: View {
     @State private var activeCategory: BrowserCategory = .emoji
     @State private var searchQuery: String = ""
     @State private var activeSubcategory: String = "All"
+    
+    // Dynamic GIFs state
+    @State private var gifItems: [GifItem] = GifService.shared.curatedCatalog
+    @State private var isSearchingGifs: Bool = false
+    @State private var activeGifCategory: String = "Trending"
+    @State private var copiedGifImageState: Bool = false
+    @State private var copiedGifLinkState: Bool = false
+    @State private var selectedGifProvider: GifProvider = .all
     
     // Selection states for each category
     @State private var selectedEmoji: EmojiItem?
@@ -136,16 +137,6 @@ struct EmojiBrowserView: View {
         SnippetItem(title: "SQL Select All", content: "SELECT * FROM table_name WHERE condition ORDER BY created_at DESC;", category: "Development")
     ]
     
-    // GIFs placeholder data
-    let gifItems = [
-        GifItem(emojiPlaceholder: "🎉", title: "Celebration Dance", urlString: "https://giphy.com/..."),
-        GifItem(emojiPlaceholder: "🤔", title: "Intense Thinking", urlString: "https://giphy.com/..."),
-        GifItem(emojiPlaceholder: "👏", title: "Sarcastic Clapping", urlString: "https://giphy.com/..."),
-        GifItem(emojiPlaceholder: "😱", title: "Shocked Face", urlString: "https://giphy.com/..."),
-        GifItem(emojiPlaceholder: "👍", title: "Thumbsup Approval", urlString: "https://giphy.com/..."),
-        GifItem(emojiPlaceholder: "🥱", title: "Bored Yawn", urlString: "https://giphy.com/...")
-    ]
-    
     // Base layouts
     var body: some View {
         HStack(spacing: 0) {
@@ -172,6 +163,7 @@ struct EmojiBrowserView: View {
         .onAppear {
             loadCustomShortcuts()
             loadUsageStats()
+            loadGifs()
             
             // Default selections
             if selectedEmoji == nil {
@@ -188,6 +180,23 @@ struct EmojiBrowserView: View {
             }
             if selectedGif == nil {
                 selectedGif = gifItems.first
+            }
+        }
+        .onChange(of: searchQuery) { query in
+            if activeCategory == .gifs {
+                loadGifs(query: query, category: activeGifCategory)
+            }
+        }
+    }
+    
+    private func loadGifs(query: String = "", category: String? = nil, provider: GifProvider? = nil) {
+        isSearchingGifs = true
+        let activeProv = provider ?? selectedGifProvider
+        GifService.shared.searchGifs(query: query, category: category ?? activeGifCategory, provider: activeProv) { results in
+            self.gifItems = results
+            self.isSearchingGifs = false
+            if self.selectedGif == nil || !results.contains(where: { $0.id == self.selectedGif?.id }) {
+                self.selectedGif = results.first
             }
         }
     }
@@ -294,6 +303,34 @@ struct EmojiBrowserView: View {
                 .padding(.vertical, 7)
                 .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.06)))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                
+                if activeCategory == .gifs {
+                    HStack(spacing: 3) {
+                        ForEach(GifProvider.allCases) { prov in
+                            Button(action: {
+                                withAnimation {
+                                    selectedGifProvider = prov
+                                    loadGifs(query: searchQuery, category: activeGifCategory, provider: prov)
+                                }
+                            }) {
+                                Text(prov.rawValue)
+                                    .font(.system(size: 10, weight: selectedGifProvider == prov ? .bold : .medium))
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 5)
+                                    .background(
+                                        Capsule().fill(selectedGifProvider == prov ? Color.pink.opacity(0.35) : Color.white.opacity(0.04))
+                                    )
+                                    .overlay(
+                                        Capsule().stroke(selectedGifProvider == prov ? Color.pink.opacity(0.7) : Color.clear, lineWidth: 1)
+                                    )
+                                    .foregroundColor(selectedGifProvider == prov ? .white : .white.opacity(0.6))
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(3)
+                    .background(Capsule().fill(Color.white.opacity(0.03)))
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -322,6 +359,45 @@ struct EmojiBrowserView: View {
                                             .stroke(activeSubcategory == subcat ? Color.blue.opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1)
                                     )
                                     .foregroundColor(activeSubcategory == subcat ? .white : .white.opacity(0.8))
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .frame(height: 30)
+                .padding(.bottom, 8)
+            } else if activeCategory == .gifs {
+                // Gboard-Style Reaction Filter Chips for GIFs
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(GifService.reactionCategories, id: \.self) { cat in
+                            Button(action: {
+                                withAnimation {
+                                    activeGifCategory = cat
+                                    searchQuery = ""
+                                    loadGifs(query: "", category: cat)
+                                }
+                            }) {
+                                HStack(spacing: 4) {
+                                    if cat == "Trending" {
+                                        Image(systemName: "flame.fill")
+                                            .font(.system(size: 10))
+                                    }
+                                    Text(cat)
+                                        .font(.system(size: 11, weight: activeGifCategory == cat ? .semibold : .regular))
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    Capsule()
+                                        .fill(activeGifCategory == cat ? Color.pink.opacity(0.3) : Color.white.opacity(0.04))
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .stroke(activeGifCategory == cat ? Color.pink.opacity(0.7) : Color.white.opacity(0.08), lineWidth: 1)
+                                )
+                                .foregroundColor(activeGifCategory == cat ? .white : .white.opacity(0.75))
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -544,50 +620,55 @@ struct EmojiBrowserView: View {
     
     // GIFs Grid
     private var gifGrid: some View {
-        let filtered = gifItems.filter { item in
-            searchQuery.isEmpty || item.title.lowercased().contains(searchQuery.lowercased())
-        }
-        
         let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
         
         return Group {
-            if filtered.isEmpty {
-                emptyGridState(text: "No GIFs found")
+            if isSearchingGifs && gifItems.isEmpty {
+                VStack(spacing: 12) {
+                    Spacer()
+                    ProgressView()
+                        .scaleEffect(1.2)
+                        .progressViewStyle(CircularProgressViewStyle(tint: .pink))
+                    Text("Searching GIFs...")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.5))
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, minHeight: 300)
+            } else if gifItems.isEmpty {
+                emptyGridState(text: searchQuery.isEmpty ? "No GIFs in this category" : "No GIFs found for \"\(searchQuery)\"")
             } else {
                 LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(filtered) { item in
+                    ForEach(gifItems) { item in
                         Button(action: {
                             selectedGif = item
                             isAddingShortcut = false
                             newShortcutText = ""
                         }) {
                             VStack(spacing: 0) {
-                                // Graphic Placeholder
-                                ZStack {
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            Color.purple.opacity(0.3),
-                                            Color.blue.opacity(0.3)
-                                        ]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+                                // Live Animated Preview
+                                ZStack(alignment: .bottomTrailing) {
+                                    AnimatedGIFView(
+                                        urlString: item.previewUrl,
+                                        placeholderEmoji: "🎬",
+                                        cornerRadius: 8
                                     )
+                                    .frame(height: 120)
+                                    .frame(maxWidth: .infinity)
                                     
-                                    VStack(spacing: 8) {
-                                        Text(item.emojiPlaceholder)
-                                            .font(.system(size: 40))
-                                        
-                                        Text("GIF Preview")
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(.white.opacity(0.6))
-                                    }
+                                    Text("GIF")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 2)
+                                        .background(Capsule().fill(Color.black.opacity(0.65)))
+                                        .padding(6)
                                 }
-                                .frame(height: 100)
                                 
                                 // Label
                                 HStack {
                                     Text(item.title)
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(.system(size: 11, weight: .medium))
                                         .foregroundColor(.white)
                                         .lineLimit(1)
                                     Spacer()
@@ -595,14 +676,14 @@ struct EmojiBrowserView: View {
                                         .font(.system(size: 10))
                                         .foregroundColor(.white.opacity(0.4))
                                 }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 8)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
                                 .background(Color.white.opacity(0.04))
                             }
                             .cornerRadius(10)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .stroke(selectedGif?.id == item.id ? Color.blue.opacity(0.7) : Color.white.opacity(0.08), lineWidth: 1)
+                                    .stroke(selectedGif?.id == item.id ? Color.pink.opacity(0.8) : Color.white.opacity(0.08), lineWidth: selectedGif?.id == item.id ? 2 : 1)
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -944,89 +1025,135 @@ struct EmojiBrowserView: View {
     @ViewBuilder
     private func gifDetails(_ item: GifItem) -> some View {
         VStack(spacing: 0) {
-            // Visual Preview Box
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
+            // Live Animated GIF Player
+            AnimatedGIFView(
+                urlString: item.fullUrl.isEmpty ? item.previewUrl : item.fullUrl,
+                placeholderEmoji: "🎬",
+                cornerRadius: 12
+            )
+            .frame(height: 160)
+            .padding(.horizontal, 16)
+            .padding(.top, 24)
+            .padding(.bottom, 14)
+            
+            Text(item.title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.yellow)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 4)
+            
+            HStack(spacing: 6) {
+                Text(item.category)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.pink)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.pink.opacity(0.15)))
+                
+                Text(item.source.uppercased())
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.yellow.opacity(0.9))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.yellow.opacity(0.15)))
+            }
+            .padding(.bottom, 12)
+            
+            // Statistics card
+            let usage = usageStats[item.title] ?? 0
+            HStack(spacing: 12) {
+                Image(systemName: "chart.bar.fill")
+                    .foregroundColor(.pink)
+                    .font(.system(size: 14))
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Usage Statistics")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.9))
+                    Text(usage > 0 ? "Used \(usage) times" : "Never used yet")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                Spacer()
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.03)))
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+            
+            // Custom Shortcodes tag editor for this GIF
+            tagEditorSection(key: item.title, defaultShortcode: item.title.lowercased().replacingOccurrences(of: " ", with: "_"))
+            
+            Spacer()
+            
+            // Action Buttons
+            VStack(spacing: 8) {
+                // Primary Action: Copy GIF Image (for chat & documents)
+                Button(action: {
+                    GifService.shared.copyGifToClipboard(item: item) { success in
+                        withAnimation { copiedGifImageState = true }
+                        loadUsageStats()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation { copiedGifImageState = false }
+                        }
+                    }
+                }) {
+                    HStack {
+                        Spacer()
+                        Image(systemName: copiedGifImageState ? "checkmark.circle.fill" : "doc.on.doc.fill")
+                            .font(.system(size: 12, weight: .bold))
+                        Text(copiedGifImageState ? "GIF Image Copied!" : "Copy GIF Image")
+                            .font(.system(size: 12, weight: .bold))
+                        Spacer()
+                    }
+                    .foregroundColor(.white)
+                    .padding(.vertical, 9)
+                    .background(
                         LinearGradient(
-                            gradient: Gradient(colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.2)]),
+                            gradient: Gradient(colors: copiedGifImageState ? [Color.green, Color.green.opacity(0.8)] : [Color.pink, Color.purple.opacity(0.8)]),
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(height: 120)
-                    .padding(.horizontal, 16)
-                
-                VStack(spacing: 8) {
-                    Text(item.emojiPlaceholder)
-                        .font(.system(size: 48))
-                    Text("Interactive GIF Panel")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
+                    .cornerRadius(8)
                 }
+                .buttonStyle(PlainButtonStyle())
+                
+                // Secondary Action: Copy GIF Web Link
+                Button(action: {
+                    let targetUrl = item.fullUrl.isEmpty ? item.previewUrl : item.fullUrl
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(targetUrl, forType: .string)
+                    
+                    if UserDefaults.standard.bool(forKey: "soundEffects") {
+                        NSSound(named: "Pop")?.play()
+                    }
+                    
+                    withAnimation { copiedGifLinkState = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation { copiedGifLinkState = false }
+                    }
+                }) {
+                    HStack {
+                        Spacer()
+                        Image(systemName: copiedGifLinkState ? "checkmark.circle.fill" : "link")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(copiedGifLinkState ? "Link Copied!" : "Copy GIF Link")
+                            .font(.system(size: 11, weight: .semibold))
+                        Spacer()
+                    }
+                    .foregroundColor(.white.opacity(0.8))
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.06))
+                    .cornerRadius(8)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.08), lineWidth: 1))
+                }
+                .buttonStyle(PlainButtonStyle())
             }
-            .padding(.top, 36)
+            .padding(.horizontal, 16)
             .padding(.bottom, 20)
-            
-            Text(item.title)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.yellow)
-                .padding(.bottom, 4)
-            
-            Text("GIF / Dynamic Media Placeholder")
-                .font(.system(size: 11))
-                .foregroundColor(.white.opacity(0.4))
-                .padding(.bottom, 24)
-            
-            // Explanation
-            VStack(alignment: .leading, spacing: 8) {
-                Text("ABOUT GIF SUPPORT")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.white.opacity(0.4))
-                
-                Text("Search trending gifs via integrated search API. Copying or selecting a GIF copies its direct CDN link to insert instantly inside rich message fields.")
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.65))
-                    .lineSpacing(3)
-            }
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.03)))
-            .padding(.horizontal, 16)
-            
-            Spacer()
-            
-            // Copy URL link directly
-            Button(action: {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString("https://media.giphy.com/media/dummy/giphy.gif", forType: .string)
-                
-                if UserDefaults.standard.bool(forKey: "soundEffects") {
-                    NSSound(named: "Pop")?.play()
-                }
-                
-                withAnimation { copiedState = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    withAnimation { copiedState = false }
-                }
-            }) {
-                HStack {
-                    Spacer()
-                    Image(systemName: copiedState ? "checkmark.circle.fill" : "link")
-                        .font(.system(size: 13, weight: .bold))
-                    Text(copiedState ? "Link Copied!" : "Copy GIF URL")
-                        .font(.system(size: 13, weight: .bold))
-                    Spacer()
-                }
-                .foregroundColor(.white)
-                .padding(.vertical, 10)
-                .background(
-                    LinearGradient(gradient: Gradient(colors: copiedState ? [Color.green, Color.green.opacity(0.8)] : [Color.purple, Color.purple.opacity(0.7)]), startPoint: .topLeading, endPoint: .bottomTrailing)
-                )
-                .cornerRadius(8)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
         }
     }
     

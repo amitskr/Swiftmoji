@@ -3,8 +3,8 @@ import ServiceManagement
 
 struct PreferencesView: View {
     @AppStorage("launchAtLogin") private var launchAtLogin = false
-    @AppStorage("triggerCharacter") private var triggerCharacter = ":"
-    @AppStorage("useDoubleTrigger") private var useDoubleTrigger = false
+    @AppStorage("triggerCharacter") private var triggerCharacter = "\\"
+    @AppStorage("useDoubleTrigger") private var useDoubleTrigger = true
     @AppStorage("soundEffects") private var soundEffects = true
     @AppStorage("skinTone") private var skinTone = 0
     
@@ -50,12 +50,12 @@ struct PreferencesView: View {
                                 if let firstChar = newValue.first {
                                     triggerCharacter = String(firstChar)
                                 } else {
-                                    triggerCharacter = "" // Let user delete it, but we can default back to ":"
+                                    triggerCharacter = "" // Let user delete it, but we can default back to "\\"
                                 }
                             }
                         ), onCommit: {
                             if triggerCharacter.isEmpty {
-                                triggerCharacter = ":" // Default fallback if they leave it empty
+                                triggerCharacter = "\\" // Default fallback if they leave it empty
                             }
                         })
                         .font(.system(size: 13, weight: .semibold, design: .monospaced))
@@ -73,7 +73,7 @@ struct PreferencesView: View {
                         Image(systemName: "questionmark.circle.fill")
                             .foregroundColor(.white.opacity(0.3))
                             .font(.system(size: 16))
-                            .help("Type any single character to use as the trigger (e.g. :, ;, ~). Checking 'Use double key trigger' requires typing it twice consecutively.")
+                            .help("Type any single character to use as the trigger (e.g. \\, :, ;). Checking 'Use double key trigger' requires typing it twice consecutively.")
                         
                         // Checkbox toggle
                         Toggle("Use double key trigger", isOn: $useDoubleTrigger)

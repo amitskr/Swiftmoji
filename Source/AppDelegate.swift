@@ -16,8 +16,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Register standard defaults
         UserDefaults.standard.register(defaults: [
             "soundEffects": true,
-            "triggerCharacter": ":",
-            "useDoubleTrigger": false,
+            "triggerCharacter": "\\",
+            "useDoubleTrigger": true,
             "launchAtLogin": false,
             "skinTone": 0
         ])
@@ -38,12 +38,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            let font = NSFont.systemFont(ofSize: 18)
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: font,
-                .foregroundColor: NSColor.labelColor
-            ]
-            button.attributedTitle = NSAttributedString(string: "☘︎", attributes: attributes)
+            if let icon = loadStatusBarIcon() {
+                button.image = icon
+                button.imagePosition = .imageOnly
+            } else {
+                let font = NSFont.systemFont(ofSize: 16)
+                let attributes: [NSAttributedString.Key: Any] = [
+                    .font: font,
+                    .foregroundColor: NSColor.labelColor
+                ]
+                button.attributedTitle = NSAttributedString(string: "🕊️", attributes: attributes)
+            }
             button.action = #selector(statusItemClicked)
             button.target = self
         }
@@ -58,6 +63,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Quit Swiftmoji", action: #selector(quitApp), keyEquivalent: "q"))
         
         statusItem?.menu = menu
+    }
+    
+    private func loadStatusBarIcon() -> NSImage? {
+        let bundle = Bundle.main
+        
+        // 1. Try loading dedicated statusBarIcon asset from app bundle
+        if let iconUrl = bundle.url(forResource: "statusBarIcon", withExtension: "png"),
+           let iconImage = NSImage(contentsOf: iconUrl) {
+            
+            // Add Retina @2x representation if available
+            if let icon2xUrl = bundle.url(forResource: "statusBarIcon@2x", withExtension: "png"),
+               let rep2x = NSImageRep(contentsOf: icon2xUrl) {
+                rep2x.size = NSSize(width: 18, height: 18)
+                iconImage.addRepresentation(rep2x)
+            }
+            
+            iconImage.size = NSSize(width: 18, height: 18)
+            iconImage.isTemplate = true // macOS automatically adapts colors for Light & Dark mode
+            return iconImage
+        }
+        
+        // 2. Direct Contents/Resources directory fallback
+        let directPath = bundle.bundlePath + "/Contents/Resources/statusBarIcon.png"
+        if let directImage = NSImage(contentsOfFile: directPath) {
+            if let rep2x = NSImageRep(contentsOfFile: bundle.bundlePath + "/Contents/Resources/statusBarIcon@2x.png") {
+                rep2x.size = NSSize(width: 18, height: 18)
+                directImage.addRepresentation(rep2x)
+            }
+            directImage.size = NSSize(width: 18, height: 18)
+            directImage.isTemplate = true
+            return directImage
+        }
+        
+        return nil
     }
     
     @objc func statusItemClicked() {

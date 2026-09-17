@@ -50,6 +50,8 @@ class KeyboardManager {
     var currentQuery = ""
     var selectedIndex = 0
     var matches: [EmojiItem] = []
+    var gifMatches: [GifItem] = []
+    private var gifSearchWorkItem: DispatchWorkItem?
     
     // Safety guard to avoid recursive loops when inserting emojis
     var isAutoCompleting = false
@@ -58,8 +60,8 @@ class KeyboardManager {
     var caretPosition: CGPoint = .zero
     
     var triggerCharacter: String {
-        let char = UserDefaults.standard.string(forKey: "triggerCharacter") ?? ":"
-        return char.isEmpty ? ":" : char
+        let char = UserDefaults.standard.string(forKey: "triggerCharacter") ?? "\\"
+        return char.isEmpty ? "\\" : char
     }
     
     var triggerLength: Int {
@@ -158,6 +160,7 @@ class KeyboardManager {
                     currentQuery = ""
                     selectedIndex = 0
                     matches = []
+                    gifMatches = []
                     
                     detectCaretPositionAsync()
                 }
@@ -171,7 +174,7 @@ class KeyboardManager {
             // Active tracking session
             
             // If the user types the closing trigger and we have a valid selection, complete it!
-            if chars == triggerCharacter && !matches.isEmpty {
+            if chars == triggerCharacter && (!matches.isEmpty || !gifMatches.isEmpty) {
                 insertSelectedEmoji()
                 return true // Swallow the trigger and insert
             }
@@ -181,7 +184,7 @@ class KeyboardManager {
                 return true // Swallow escape to close the panel cleanly
             }
             
-            let totalItems = matches.count + 1
+            let totalItems = matches.count + gifMatches.count + 1
             
             if isArrowDown {
                 selectedIndex = (selectedIndex + 1) % totalItems
@@ -203,7 +206,7 @@ class KeyboardManager {
             if isBackspace {
                 if currentQuery.isEmpty {
                     cancelTracking()
-                    return false // Let backspace delete the leading `:`
+                    return false // Let backspace delete the leading trigger
                 } else {
                     currentQuery.removeLast()
                     filterEmojis()
@@ -241,9 +244,10 @@ class KeyboardManager {
         // Delete the shortcut by posting backspaces
         sendBackspace(count: shortcutLength)
         
-        if selectedIndex == matches.count {
-            // Option "Browse all emoji..." is selected.
-            // Trigger custom Swiftmoji Browser window instead of basic native palette!
+        let browseIndex = matches.count + gifMatches.count
+        
+        if selectedIndex == browseIndex {
+            // Option "Browse all emoji & GIFs..." is selected.
             DispatchQueue.main.async {
                 AppDelegate.shared?.openEmojiBrowser()
             }
@@ -281,6 +285,16 @@ class KeyboardManager {
             if UserDefaults.standard.bool(forKey: "soundEffects") {
                 NSSound(named: "Pop")?.play()
             }
+        } else if selectedIndex >= matches.count && selectedIndex < browseIndex {
+            // GIF suggestion selection from HUD!
+            let gifIndex = selectedIndex - matches.count
+            let selectedGif = gifMatches[gifIndex]
+            
+            GifService.shared.copyGifToClipboard(item: selectedGif) { success in
+                if success {
+                    GifService.shared.simulatePaste()
+                }
+            }
         }
         
         isAutoCompleting = false
@@ -288,13 +302,20 @@ class KeyboardManager {
     
     func cancelTracking() {
         isTracking = false
+        gifSearchWorkItem?.cancel()
+        gifSearchWorkItem = nil
         floatingPanel.hidePanel()
     }
     
     func filterEmojis() {
+        gifSearchWorkItem?.cancel()
+        
         if currentQuery.isEmpty {
-            // Show top popular emojis if query is empty
-            matches = Array(EmojiDatabase.shared.allEmojis.prefix(5))
+            // Show top popular emojis and trending GIFs if query is empty
+            matches = Array(EmojiDatabase.shared.allEmojis.prefix(4))
+            gifMatches = GifService.shared.getQuickSuggestions(for: "", limit: 3)
+            selectedIndex = 0
+            updateUI()
         } else {
             let lowerQuery = currentQuery.lowercased()
             matches = EmojiDatabase.shared.allEmojis.filter { item in
@@ -310,12 +331,36 @@ class KeyboardManager {
                 return a.shortcode.lowercased() < b.shortcode.lowercased()
             }
             
-            // Limit to 6 matches for HUD scroll readability
-            matches = Array(matches.prefix(6))
+            // Limit to 4 matches for clean HUD layout
+            matches = Array(matches.prefix(4))
+            
+            // 1. Instant local suggestion (fast response)
+            gifMatches = GifService.shared.getQuickSuggestions(for: lowerQuery, limit: 3)
+            selectedIndex = 0
+            updateUI()
+            
+            // 2. Asynchronous live search from Tenor + Giphy with slight debounce (150ms)
+            let workItem = DispatchWorkItem { [weak self] in
+                guard let self = self, self.isTracking, self.currentQuery.lowercased() == lowerQuery else { return }
+                
+                GifService.shared.searchGifs(query: lowerQuery, provider: .all) { [weak self] liveResults in
+                    guard let self = self, self.isTracking, self.currentQuery.lowercased() == lowerQuery else { return }
+                    
+                    let topResults = Array(liveResults.prefix(3))
+                    if !topResults.isEmpty {
+                        self.gifMatches = topResults
+                        // Preserve selection index if already browsing
+                        if self.selectedIndex >= self.matches.count + self.gifMatches.count {
+                            self.selectedIndex = 0
+                        }
+                        self.updateUI()
+                    }
+                }
+            }
+            
+            gifSearchWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: workItem)
         }
-        
-        selectedIndex = 0
-        updateUI()
     }
     
     func updateUI() {
@@ -327,6 +372,7 @@ class KeyboardManager {
         // Render AutocompleteView inside floating panel hosted via NSHostingView
         let hostingView = NSHostingView(rootView: AutocompleteView(
             matches: matches,
+            gifMatches: gifMatches,
             selectedIndex: selectedIndex,
             query: currentQuery,
             onSelect: { [weak self] index in

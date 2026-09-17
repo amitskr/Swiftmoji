@@ -4,7 +4,7 @@ import SwiftUI
 class FloatingPanel: NSPanel {
     init() {
         super.init(
-            contentRect: NSRect(x: 100, y: 100, width: 280, height: 320),
+            contentRect: NSRect(x: 100, y: 100, width: 310, height: 280),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -38,29 +38,33 @@ class FloatingPanel: NSPanel {
     }
     
     func show(at point: CGPoint, content: NSView) {
+        let fittingSize = content.fittingSize
+        let width: CGFloat = 310
+        let height = max(80, fittingSize.height)
+        let newSize = NSSize(width: width, height: height)
+        
         // Set content view of visualEffect
         if let visualEffect = self.contentView as? NSVisualEffectView {
             visualEffect.subviews.forEach { $0.removeFromSuperview() }
+            visualEffect.frame = NSRect(origin: .zero, size: newSize)
             content.frame = visualEffect.bounds
             content.autoresizingMask = [.width, .height]
             visualEffect.addSubview(content)
         }
         
-        // Position panel at the cursor caret position (centered horizontally above or below caret)
-        let size = self.frame.size
-        var frame = self.frame
+        var frame = NSRect(origin: self.frame.origin, size: newSize)
         
         // Position it just below the caret point
-        frame.origin.x = point.x - size.width / 2
-        frame.origin.y = point.y - size.height - 8
+        frame.origin.x = point.x - newSize.width / 2
+        frame.origin.y = point.y - newSize.height - 8
         
         // Make sure it fits on the screen
         if let screen = NSScreen.main {
             let screenFrame = screen.visibleFrame
             if frame.origin.x < screenFrame.origin.x {
                 frame.origin.x = screenFrame.origin.x + 8
-            } else if frame.origin.x + size.width > screenFrame.origin.x + screenFrame.size.width {
-                frame.origin.x = screenFrame.origin.x + screenFrame.size.width - size.width - 8
+            } else if frame.origin.x + newSize.width > screenFrame.origin.x + screenFrame.size.width {
+                frame.origin.x = screenFrame.origin.x + screenFrame.size.width - newSize.width - 8
             }
             
             if frame.origin.y < screenFrame.origin.y {

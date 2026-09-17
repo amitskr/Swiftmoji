@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swiftmoji — The Native macOS Emoji & Snippet Powerhouse</title>
+  <meta name="description" content="Type Slack-style shortcodes (:thumbsup:) anywhere on macOS. Instant glassmorphic autocomplete near your text caret, custom snippets, and 3-column split-view browser built for Apple Silicon.">
+  <link rel="icon" type="image/png" href="assets/images/app_icon.png">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="assets/css/custom.css">
+</head>
+<body class="bg-[#07090e] text-slate-200 antialiased selection:bg-purple-600 selection:text-white">
+
+  <!-- Background Ambient Glows -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-tr from-purple-600/20 via-blue-600/15 to-transparent blur-[140px] rounded-full"></div>
+    <div class="absolute top-[800px] -left-60 w-[600px] h-[600px] bg-purple-900/10 blur-[130px] rounded-full"></div>
+    <div class="absolute top-[1600px] -right-60 w-[600px] h-[600px] bg-blue-900/10 blur-[130px] rounded-full"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-[#07090e]/80 border-b border-white/5 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <img src="assets/images/app_icon.png" alt="Swiftmoji Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-bold text-white tracking-tight">Swiftmoji</span>
+            <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">macOS</span>
+          </div>
+          <span class="text-xs text-slate-400 font-medium">Native Shortcode Utility</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#features" class="hover:text-white transition-colors">Features</a>
+        <a href="#interactive-demo" class="hover:text-white transition-colors">Live Demo</a>
+        <a href="#screenshots" class="hover:text-white transition-colors">Real App Gallery</a>
+        <a href="#how-it-works" class="hover:text-white transition-colors">Setup</a>
+        <a href="#downloads" class="hover:text-white transition-colors">Downloads</a>
+        <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
+      </nav>
+
+      <!-- Quick Download Action -->
+      <div class="flex items-center gap-3">
+        <a href="#downloads" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all">
+          <svg class="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.93-2.85-.9.04-2 .6-2.65 1.35-.58.66-1.09 1.73-.95 2.76 1.01.08 2.05-.51 2.67-1.26z"/>
+          </svg>
+          Apple Silicon
+        </a>
+        <a href="downloads/Swiftmoji.dmg" download class="glow-btn inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-600/30 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          <span>Download .DMG</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative pt-16 pb-24 md:pt-24 md:pb-32 overflow-hidden z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      
+      <!-- Top Pill -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold uppercase tracking-wider mb-8 animate-pulse">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+        Built with Antigravity for Apple Silicon (M1—M5)
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] mb-6 max-w-5xl mx-auto">
+        Slack-style shortcodes in <br class="hidden sm:inline">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-violet-300 to-indigo-300">any active macOS app.</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-10 font-normal">
+        Type double backslash <code class="px-2 py-0.5 rounded bg-purple-950/70 border border-purple-500/30 text-purple-300 font-mono text-base font-semibold">\\thumbsup</code> or custom snippet tags in Notes, VS Code, Slack, Chrome, or Mail. 
+        Instant glassmorphic autocomplete floats at your caret without stealing keyboard focus.
+      </p>
+
+      <!-- Primary Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+        <a href="downloads/Swiftmoji.dmg" download class="glow-btn w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-700 hover:from-purple-500 hover:to-indigo-500 rounded-2xl shadow-xl shadow-purple-600/30 transition-all group">
+          <svg class="w-5 h-5 text-white group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          <div class="text-left">
+            <div class="text-xs text-purple-200 font-normal">Download for macOS</div>
+            <div class="text-sm font-bold">Swiftmoji.dmg (3.6 MB)</div>
+          </div>
+        </a>
+
+        <a href="downloads/Swiftmoji-macOS.zip" download class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-4 text-sm font-medium text-slate-200 bg-slate-900/80 hover:bg-slate-800/80 rounded-2xl border border-white/10 hover:border-white/20 transition-all">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+          </svg>
+          <div class="text-left">
+            <div class="text-xs text-slate-400">Universal Archive</div>
+            <div class="text-sm font-semibold">Download .ZIP (3.2 MB)</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Highlights Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 border-t border-white/5 text-xs text-slate-400">
+        <div class="flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+          <span>Zero-Latency Event Tap</span>
+        </div>
+        <div class="flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+          <span>100% Offline & Private</span>
+        </div>
+        <div class="flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          <span>Non-Focus-Stealing HUD</span>
+        </div>
+        <div class="flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+          </svg>
+          <span>Apple Silicon Native</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interactive Live Simulator Section -->
+  <section id="interactive-demo" class="py-16 bg-[#0c0f18]/60 border-y border-white/5 relative z-10">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center mb-10">
+        <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Try It Live Right In Your Browser</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mt-2">Interactive Keystroke & HUD Simulator</h2>
+        <p class="text-slate-400 text-sm sm:text-base mt-2 max-w-2xl mx-auto">
+          Experience the exact feel of Swiftmoji! Type double backslash <code class="text-purple-300 font-mono">\\</code> (or <code class="text-purple-300 font-mono">:</code>) followed by an emoji name, or click any chip below to watch the Caret HUD float and autocomplete.
+        </p>
+      </div>
+
+      <!-- Quick trigger pills -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mb-6 text-xs">
+        <span class="text-slate-400 font-medium">Click to test:</span>
+        <button class="sim-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-slate-300 hover:text-white border border-white/10 transition-all" data-trigger="coffee">
+          ☕ \\coffee
+        </button>
+        <button class="sim-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-slate-300 hover:text-white border border-white/10 transition-all" data-trigger="shrug">
+          ¯\_(ツ)_/¯ \\shrug
+        </button>
+        <button class="sim-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-slate-300 hover:text-white border border-white/10 transition-all" data-trigger="fire">
+          🔥 \\fire
+        </button>
+        <button class="sim-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-slate-300 hover:text-white border border-white/10 transition-all" data-trigger="rocket">
+          🚀 \\rocket
+        </button>
+        <button class="sim-pill px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-slate-300 hover:text-white border border-white/10 transition-all" data-trigger="sig">
+          📝 \\sig (Snippet)
+        </button>
+      </div>
+
+      <!-- Mac Window Simulator Card -->
+      <div class="mac-window bg-[#121622] border border-white/10 shadow-2xl relative">
+        <div class="mac-titlebar flex items-center justify-between">
+          <div class="flex items-center">
+            <span class="mac-dot red"></span>
+            <span class="mac-dot yellow"></span>
+            <span class="mac-dot green"></span>
+            <span class="text-xs text-slate-400 font-medium ml-2">Any Mac App (Notes / Slack / Mail / Chrome)</span>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">Swiftmoji HUD Active</span>
+        </div>
+
+        <div class="p-6 sm:p-8 relative min-h-[220px]">
+          <label for="sim-input" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            Try typing anywhere below:
+          </label>
+          <div class="relative">
+            <input 
+              id="sim-input" 
+              type="text" 
+              value="Drafting a message with Swiftmoji \\th" 
+              class="w-full bg-[#0a0d14] border border-purple-500/30 rounded-xl px-4 py-3.5 text-slate-100 font-mono text-base focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all"
+              placeholder="Type '\\' or ':' followed by coffee, fire, shrug, thumbsup..."
+            />
+
+            <!-- Floating HUD Popup Simulated -->
+            <div id="sim-hud" class="hud-popup top-16 left-8 shadow-2xl">
+              <div class="p-1.5 border-b border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-mono px-2">
+                <span>Swiftmoji HUD</span>
+                <span class="text-purple-400">↑↓ select · ↵ confirm</span>
+              </div>
+              <div id="sim-hud-items" class="p-1.5 flex flex-col gap-0.5">
+                <div class="hud-item active">
+                  <span class="text-xl font-normal w-7 text-center">👍</span>
+                  <div class="flex-1 flex items-baseline justify-between">
+                    <span class="font-medium text-slate-100">\\thumbsup</span>
+                    <span class="text-xs text-slate-400 ml-2">Smileys</span>
+                  </div>
+                </div>
+              </div>
+              <div class="px-2.5 py-1.5 text-[11px] text-purple-400 hover:text-purple-300 font-medium border-t border-white/5 cursor-pointer flex items-center justify-between">
+                <span>+ Browse all emoji...</span>
+                <span class="font-mono text-[10px] text-slate-500">⌃⌥Space</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center justify-between text-xs text-slate-400">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Double backslash <code class="text-purple-300 font-mono">\\keyword\</code> or colon automatically converts in-place
+            </span>
+            <span class="font-mono text-slate-400 hidden sm:inline">Escape to dismiss · Space to cancel</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Real App Screenshots Gallery Section -->
+  <section id="screenshots" class="py-24 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-14">
+        <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Real App Screenshots</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 tracking-tight">
+          See Swiftmoji in Action
+        </h2>
+        <p class="text-slate-300 text-base sm:text-lg mt-3">
+          Explore actual screenshots of the native macOS app running on Apple Silicon. From the floating caret HUD to the 3-column split browser and custom snippet engine.
+        </p>
+      </div>
+
+      <!-- Screenshot Navigation Tabs -->
+      <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-10">
+        <button data-tab="hud" class="screenshot-tab px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all bg-purple-600/20 border-purple-500/50 text-white flex items-center gap-2">
+          <span class="text-base">🪟</span>
+          <span>Floating Caret HUD</span>
+        </button>
+        <button data-tab="browser" class="screenshot-tab px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all text-slate-400 border-white/5 hover:text-white hover:bg-white/5 flex items-center gap-2">
+          <span class="text-base">📚</span>
+          <span>3-Column Split Browser</span>
+        </button>
+        <button data-tab="snippets" class="screenshot-tab px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all text-slate-400 border-white/5 hover:text-white hover:bg-white/5 flex items-center gap-2">
+          <span class="text-base">📝</span>
+          <span>Custom Snippets & Codes</span>
+        </button>
+        <button data-tab="preferences" class="screenshot-tab px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all text-slate-400 border-white/5 hover:text-white hover:bg-white/5 flex items-center gap-2">
+          <span class="text-base">⚙️</span>
+          <span>Preferences & Skin Tones</span>
+        </button>
+      </div>
+
+      <!-- Screenshot Display Card -->
+      <div class="glass-panel rounded-2xl p-4 sm:p-8 max-w-5xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <!-- Image View with Lightbox Trigger -->
+          <div class="lg:col-span-7">
+            <div class="screenshot-container relative group rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 lightbox-trigger" data-src="assets/images/hud_autocomplete.jpg">
+              <img 
+                id="active-screenshot-img" 
+                src="assets/images/hud_autocomplete.jpg" 
+                alt="Swiftmoji Floating HUD Autocomplete Panel" 
+                class="w-full h-auto object-contain transition-opacity duration-200"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 justify-between">
+                <span class="text-xs font-semibold text-white bg-purple-600/80 px-3 py-1 rounded-lg backdrop-blur-sm">
+                  🔍 Click to inspect full resolution
+                </span>
+                <span class="text-xs text-slate-300 font-mono">Real App Screenshot</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Description Column -->
+          <div class="lg:col-span-5 flex flex-col justify-center">
+            <h3 id="screenshot-title" class="text-2xl font-bold text-white mb-3">
+              Glassmorphic Floating Caret HUD
+            </h3>
+            <p id="screenshot-desc" class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
+              Monitors keystroke events globally and floats right at your text cursor. Configured as an NSPanel at .statusBar level so it never steals keyboard focus from your active document or editor.
+            </p>
+
+            <div id="screenshot-badges" class="flex flex-wrap gap-2 mb-8">
+              <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">Non-Activating NSPanel</span>
+              <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">Zero Latency</span>
+              <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">Caret Tracking</span>
+              <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">Mouse & Keyboard Nav</span>
+            </div>
+
+            <div class="p-4 rounded-xl bg-purple-950/20 border border-purple-500/20">
+              <div class="flex items-start gap-3">
+                <div class="p-2 rounded-lg bg-purple-500/20 text-purple-300">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="text-xs font-semibold text-purple-200 uppercase tracking-wider">Engineering Detail</h4>
+                  <p class="text-xs text-slate-300 mt-0.5">
+                    Utilizes Quartz CGEventTap at the WindowServer session tier to calculate screen bounds with Accessibility API and inject synthetic backspaces in nanoseconds.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Additional Real Asset Thumbnails -->
+      <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto">
+        <div class="glass-panel p-3 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer lightbox-trigger" data-src="assets/images/hud_autocomplete.jpg">
+          <div class="aspect-video overflow-hidden rounded-lg bg-black/40 mb-2">
+            <img src="assets/images/hud_autocomplete.jpg" alt="HUD Panel" class="w-full h-full object-cover">
+          </div>
+          <div class="text-xs font-semibold text-slate-300 truncate">1. Floating HUD</div>
+          <div class="text-[10px] text-slate-500">Caret Alignment</div>
+        </div>
+
+        <div class="glass-panel p-3 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer lightbox-trigger" data-src="assets/images/emoji_browser.png">
+          <div class="aspect-video overflow-hidden rounded-lg bg-black/40 mb-2">
+            <img src="assets/images/emoji_browser.png" alt="Emoji Browser" class="w-full h-full object-cover">
+          </div>
+          <div class="text-xs font-semibold text-slate-300 truncate">2. Split Browser</div>
+          <div class="text-[10px] text-slate-500">Emojis & Symbols</div>
+        </div>
+
+        <div class="glass-panel p-3 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer lightbox-trigger" data-src="assets/images/snippets_browser.png">
+          <div class="aspect-video overflow-hidden rounded-lg bg-black/40 mb-2">
+            <img src="assets/images/snippets_browser.png" alt="Snippets Browser" class="w-full h-full object-cover">
+          </div>
+          <div class="text-xs font-semibold text-slate-300 truncate">3. Snippets Engine</div>
+          <div class="text-[10px] text-slate-500">Shortcode Mapping</div>
+        </div>
+
+        <div class="glass-panel p-3 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer lightbox-trigger" data-src="assets/images/preferences.png">
+          <div class="aspect-video overflow-hidden rounded-lg bg-black/40 mb-2">
+            <img src="assets/images/preferences.png" alt="Preferences" class="w-full h-full object-cover">
+          </div>
+          <div class="text-xs font-semibold text-slate-300 truncate">4. Preferences</div>
+          <div class="text-[10px] text-slate-500">Skin Tones & Timer</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Core Features Grid -->
+  <section id="features" class="py-24 bg-[#0a0d16]/70 border-t border-white/5 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Under The Hood</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 tracking-tight">
+          Engineered for Pure Velocity
+        </h2>
+        <p class="text-slate-300 text-base sm:text-lg mt-3">
+          Designed specifically for macOS power users who value distraction-free writing, system-wide consistency, and zero overhead.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Feature 1 -->
+        <div class="glass-panel-interactive p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Global CGEventTap</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            Swiftmoji intercepts keystrokes via low-level macOS WindowServer Event Taps. When you type your trigger, backspaces are injected seamlessly without stalling your active typing stream.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="glass-panel-interactive p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Non-Activating NSPanel</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            Unlike web wrappers, the floating HUD is a native <code class="text-purple-300 font-mono text-xs">NSPanel</code> configured at <code class="text-purple-300 font-mono text-xs">.statusBar</code> level. It renders over any document without stealing focus or interrupting your flow.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="glass-panel-interactive p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Custom Shortcode Mapper</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            Bind personalized keywords to recurring text, signatures, or multi-line boilerplate. Type <code class="text-purple-300 font-mono text-xs">:shrug:</code> to output <code class="text-slate-200">¯\_(ツ)_/¯</code> or <code class="text-purple-300 font-mono text-xs">:sig:</code> for your company signoff.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="glass-panel-interactive p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Ctrl+Cmd+Space Override</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            Tired of the sluggish default macOS emoji picker? Swiftmoji can intercept <code class="text-purple-300 font-mono text-xs">⌃⌘Space</code> globally and summon its 3-column split view browser instantly.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="glass-panel-interactive p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">100% Offline & Private</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            Swiftmoji makes zero outbound network requests. No telemetry, no tracking, and no external servers. Your keystrokes never leave your Mac.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="glass-panel-interactive p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-6">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Deep Ad-Hoc Code Signed</h3>
+          <p class="text-slate-300 text-sm leading-relaxed">
+            Packaged with <code class="text-purple-300 font-mono text-xs">codesign -s - --deep</code> so macOS remembers Accessibility privileges across updates and restarts without annoying security re-prompts.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works / 3-Step Setup -->
+  <section id="how-it-works" class="py-24 relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Quick Start</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 tracking-tight">
+          Up & Running in 60 Seconds
+        </h2>
+        <p class="text-slate-300 text-base sm:text-lg mt-3">
+          No complex dependencies or package managers. Simply drag, grant Accessibility, and start typing.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        
+        <!-- Step 1 -->
+        <div class="glass-panel p-8 rounded-2xl border border-white/10 relative">
+          <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-extrabold flex items-center justify-center text-lg mb-6 shadow-lg shadow-purple-600/30">
+            1
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Download & Install</h3>
+          <p class="text-slate-300 text-sm leading-relaxed mb-4">
+            Open <code class="text-purple-300 font-mono">Swiftmoji.dmg</code> and drag the application icon into your Mac's <code class="text-slate-200 font-mono">/Applications</code> folder.
+          </p>
+          <div class="p-3 bg-black/40 rounded-xl border border-white/5 text-xs text-slate-400 font-mono">
+            Drag Swiftmoji.app → Applications
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="glass-panel p-8 rounded-2xl border border-white/10 relative">
+          <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-extrabold flex items-center justify-center text-lg mb-6 shadow-lg shadow-purple-600/30">
+            2
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Enable Accessibility</h3>
+          <p class="text-slate-300 text-sm leading-relaxed mb-4">
+            On first launch, grant permission in <strong class="text-white">System Settings &gt; Privacy &amp; Security &gt; Accessibility</strong> so Swiftmoji can listen for shortcode triggers.
+          </p>
+          <div class="p-3 bg-black/40 rounded-xl border border-white/5 text-xs text-slate-400 font-mono flex items-center justify-between">
+            <span class="truncate">tccutil reset Accessibility com.amitsarkar.Swiftmoji</span>
+            <button class="copy-btn text-purple-400 hover:text-purple-300 ml-2" data-copy="tccutil reset Accessibility com.amitsarkar.Swiftmoji">Copy</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="glass-panel p-8 rounded-2xl border border-white/10 relative">
+          <div class="w-10 h-10 rounded-full bg-purple-600 text-white font-extrabold flex items-center justify-center text-lg mb-6 shadow-lg shadow-purple-600/30">
+            3
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Type Anywhere</h3>
+          <p class="text-slate-300 text-sm leading-relaxed mb-4">
+            Open any text field (Chrome, Notes, Slack, Xcode) and type <code class="text-purple-300 font-mono">\\th</code>. Select your emoji with arrows or hit Enter!
+          </p>
+          <div class="p-3 bg-black/40 rounded-xl border border-white/5 text-xs text-emerald-400 font-mono">
+            \\thumbsup → 👍
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Download Center & Verification -->
+  <section id="downloads" class="py-24 bg-[#0a0d16]/80 border-t border-white/5 relative z-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Direct Downloads</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 tracking-tight">
+          Download Swiftmoji for macOS
+        </h2>
+        <p class="text-slate-300 text-base sm:text-lg mt-3">
+          Get the latest signed release directly. Fully optimized for Apple Silicon Macs running macOS 11.0 Big Sur, Monterey, Ventura, Sonoma, or Sequoia.
+        </p>
+      </div>
+
+      <!-- Download Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        
+        <!-- Apple Disk Image (.dmg) Card -->
+        <div class="glass-panel-interactive p-8 rounded-3xl border border-purple-500/30 flex flex-col justify-between relative overflow-hidden group">
+          <div class="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl bg-purple-600/30 border-l border-b border-purple-500/40 text-[11px] font-bold text-purple-300 uppercase tracking-wider">
+            Recommended
+          </div>
+
+          <div>
+            <div class="w-14 h-14 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-6">
+              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 0.93-2.85-.9.04-2 .6-2.65 1.35-.58.66-1.09 1.73-.95 2.76 1.01.08 2.05-.51 2.67-1.26z"/>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-1">Apple Disk Image (.dmg)</h3>
+            <p class="text-slate-400 text-sm mb-6">Standard macOS drag-and-drop installer with quick-start instructions.</p>
+
+            <div class="space-y-2 text-xs text-slate-300 font-mono mb-8">
+              <div class="flex justify-between py-1 border-b border-white/5">
+                <span class="text-slate-500">File Name:</span>
+                <span>Swiftmoji.dmg</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/5">
+                <span class="text-slate-500">File Size:</span>
+                <span class="text-purple-300 font-semibold">3.6 MB</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/5">
+                <span class="text-slate-500">Architecture:</span>
+                <span>Apple Silicon (arm64)</span>
+              </div>
+              <div class="flex justify-between py-1">
+                <span class="text-slate-500">Minimum OS:</span>
+                <span>macOS 11.0+</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <a href="downloads/Swiftmoji.dmg" download class="glow-btn w-full inline-flex items-center justify-center gap-2 px-6 py-4 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-600/30 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              <span>Download Swiftmoji.dmg</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Universal ZIP Archive Card -->
+        <div class="glass-panel-interactive p-8 rounded-3xl border border-white/10 flex flex-col justify-between relative">
+          <div>
+            <div class="w-14 h-14 rounded-2xl bg-slate-800/60 border border-white/10 flex items-center justify-center text-slate-300 mb-6">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-1">Universal ZIP Archive</h3>
+            <p class="text-slate-400 text-sm mb-6">Direct application bundle packaged with Mac extended attributes preserved.</p>
+
+            <div class="space-y-2 text-xs text-slate-300 font-mono mb-8">
+              <div class="flex justify-between py-1 border-b border-white/5">
+                <span class="text-slate-500">File Name:</span>
+                <span>Swiftmoji-macOS.zip</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/5">
+                <span class="text-slate-500">File Size:</span>
+                <span class="text-purple-300 font-semibold">3.2 MB</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-white/5">
+                <span class="text-slate-500">Packaging:</span>
+                <span>Preserves code-signatures</span>
+              </div>
+              <div class="flex justify-between py-1">
+                <span class="text-slate-500">Minimum OS:</span>
+                <span>macOS 11.0+</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <a href="downloads/Swiftmoji-macOS.zip" download class="w-full inline-flex items-center justify-center gap-2 px-6 py-4 text-sm font-bold text-slate-200 bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 rounded-xl transition-all">
+              <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              <span>Download Swiftmoji-macOS.zip</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Cryptographic SHA-256 Checksum Card -->
+      <div class="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+            <h4 class="text-sm font-bold text-white uppercase tracking-wider">SHA-256 Integrity Verification</h4>
+          </div>
+          <a href="downloads/SHA256SUMS.txt" download class="text-xs text-purple-400 hover:text-purple-300 font-mono">
+            Download SHA256SUMS.txt →
+          </a>
+        </div>
+
+        <div class="space-y-3 font-mono text-xs">
+          <div class="p-3 bg-black/40 rounded-xl border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="truncate">
+              <span class="text-slate-500 font-semibold">Swiftmoji.dmg: </span>
+              <span class="text-slate-300 selection:bg-purple-600">7133ad3e102eac5ed7e795d95e3e0e5d9312487426d8612ef6bd871fc5dd35ba</span>
+            </div>
+            <button class="copy-btn text-purple-400 hover:text-purple-300 whitespace-nowrap text-right" data-copy="7133ad3e102eac5ed7e795d95e3e0e5d9312487426d8612ef6bd871fc5dd35ba">
+              Copy Hash
+            </button>
+          </div>
+
+          <div class="p-3 bg-black/40 rounded-xl border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="truncate">
+              <span class="text-slate-500 font-semibold">Swiftmoji-macOS.zip: </span>
+              <span class="text-slate-300 selection:bg-purple-600">edf451fbae612524803324a0210c15ab7d9ccff774c760d65a637d07da98071e</span>
+            </div>
+            <button class="copy-btn text-purple-400 hover:text-purple-300 whitespace-nowrap text-right" data-copy="edf451fbae612524803324a0210c15ab7d9ccff774c760d65a637d07da98071e">
+              Copy Hash
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+          <span>Terminal verification command:</span>
+          <span class="text-slate-400">shasum -a 256 Swiftmoji.dmg</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-24 relative z-10">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center mb-16">
+        <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Got Questions?</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 tracking-tight">
+          Frequently Asked Questions
+        </h2>
+      </div>
+
+      <div class="space-y-4">
+        
+        <details class="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden" open>
+          <summary class="flex items-center justify-between cursor-pointer">
+            <h3 class="text-base font-semibold text-white group-hover:text-purple-300 transition-colors">
+              Does Swiftmoji record or send my keystrokes over the internet?
+            </h3>
+            <span class="ml-4 flex-shrink-0 text-slate-400 group-open:rotate-180 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </span>
+          </summary>
+          <p class="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            Never. Swiftmoji operates 100% locally on your Mac. It contains zero network libraries, no analytics, and makes no outbound network connections whatsoever. All shortcode conversions and custom mappings happen entirely in-memory on your device.
+          </p>
+        </details>
+
+        <details class="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <h3 class="text-base font-semibold text-white group-hover:text-purple-300 transition-colors">
+              Why does Swiftmoji require Accessibility permissions?
+            </h3>
+            <span class="ml-4 flex-shrink-0 text-slate-400 group-open:rotate-180 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </span>
+          </summary>
+          <p class="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            macOS requires Accessibility permissions for any application that listens for global keystrokes (<code class="text-purple-300 font-mono">CGEventTap</code>) across other apps, determines the active text caret position, and simulates backspaces to replace your shortcode with the intended emoji or snippet.
+          </p>
+        </details>
+
+        <details class="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <h3 class="text-base font-semibold text-white group-hover:text-purple-300 transition-colors">
+              Can I create my own custom shortcodes and snippets?
+            </h3>
+            <span class="ml-4 flex-shrink-0 text-slate-400 group-open:rotate-180 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </span>
+          </summary>
+          <p class="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            Yes! Inside the 3-Column Split Browser, you can bind any personalized trigger word to emojis, ASCII faces, special Unicode glyphs, or multi-line text snippets (such as email signatures and code templates).
+          </p>
+        </details>
+
+        <details class="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <h3 class="text-base font-semibold text-white group-hover:text-purple-300 transition-colors">
+              How do I dismiss the autocomplete HUD without selecting an emoji?
+            </h3>
+            <span class="ml-4 flex-shrink-0 text-slate-400 group-open:rotate-180 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </span>
+          </summary>
+          <p class="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            Simply press the <kbd class="px-2 py-0.5 rounded bg-black/40 border border-white/10 text-xs font-mono">Escape</kbd> key or press <kbd class="px-2 py-0.5 rounded bg-black/40 border border-white/10 text-xs font-mono">Space</kbd>. The panel dismisses immediately and leaves your text unchanged.
+          </p>
+        </details>
+
+        <details class="group glass-panel rounded-2xl border border-white/10 p-6 [&_summary::-webkit-details-marker]:hidden">
+          <summary class="flex items-center justify-between cursor-pointer">
+            <h3 class="text-base font-semibold text-white group-hover:text-purple-300 transition-colors">
+              Which Macs are supported?
+            </h3>
+            <span class="ml-4 flex-shrink-0 text-slate-400 group-open:rotate-180 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </span>
+          </summary>
+          <p class="mt-4 text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+            Swiftmoji is built natively for Apple Silicon (M1, M2, M3, M4, and M5 chips) running macOS 11.0 (Big Sur) and later, with full support for macOS Sonoma and macOS Sequoia.
+          </p>
+        </details>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 py-12 bg-[#05070a] relative z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div class="flex items-center gap-3">
+          <img src="assets/images/app_icon.png" alt="Swiftmoji" class="w-8 h-8 rounded-lg">
+          <div>
+            <div class="text-sm font-bold text-white">Swiftmoji for macOS</div>
+            <div class="text-xs text-slate-500">Built with Antigravity by Amit Sarkar</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-6 text-xs text-slate-400">
+          <a href="#features" class="hover:text-white transition-colors">Features</a>
+          <a href="#interactive-demo" class="hover:text-white transition-colors">Live Demo</a>
+          <a href="#screenshots" class="hover:text-white transition-colors">Screenshots</a>
+          <a href="#downloads" class="hover:text-white transition-colors">Downloads</a>
+          <a href="downloads/SHA256SUMS.txt" class="hover:text-white transition-colors font-mono">Checksums</a>
+        </div>
+
+        <div class="text-xs text-slate-500">
+          © 2026 Swiftmoji. All rights reserved.
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lightbox Modal for Real Screenshot Inspection -->
+  <div id="lightbox-modal" class="lightbox">
+    <button id="lightbox-close" class="absolute top-6 right-6 text-slate-400 hover:text-white p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all z-50">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+    <div class="p-4 max-w-6xl max-h-[90vh] flex items-center justify-center">
+      <img id="lightbox-target-img" src="" alt="Full Resolution App Screenshot" class="lightbox-img">
+    </div>
+  </div>
+
+  <!-- Interactive JavaScript -->
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
